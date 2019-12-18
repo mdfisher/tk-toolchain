@@ -17,7 +17,7 @@ Launch a Toolkit application from the command line by running this tool in any
 Toolkit repository.
 
 Usage:
-    tk-run-app [--context-entity-type=<entity-type>] [--context-entity-id=<entity-id>] [--location=<location>]
+    tk-run-app [--context-entity-type=<entity-type>] [--context-entity-id=<entity-id>] [--location=<location>] [--dcc-mode]
 
 Options:
 
@@ -31,6 +31,10 @@ Options:
                         Specifies the location where the Toolkit app is. If missing,
                         the application will assume it is run inside a repository
                         and will search for the app there.
+
+    --dcc-mode          When specified, a Shotgun menu is created and the application
+                        can be launched from it. Closing the dialog
+                        does not close the process.
 """
 
 import os
@@ -211,22 +215,24 @@ def main(arguments=None):
     #                                      'prefix': None,
     #                                      'short_name': 'work_area_info',
     #                                      'type': 'context_menu'}}}
-    app_launched = False
-    for name, info in engine.commands.items():
-        # We'll iterate on every app and when we find the app instance that is inside the
-        # configuration, we'll launch it.
-        if "app" not in info["properties"]:
-            # Certain commands are not coming from apps, so skip those for now.
-            continue
-        if info["properties"]["app"].instance_name == "tk-multi-run-this-app":
-            info["callback"]()
-            app_launched = True
 
-    if app_launched is False:
-        print(
-            "No commands were found. It is possible the application failed to initialize?"
-        )
-        return 1
+    if options["--dcc-mode"] is False:
+        app_launched = False
+        for name, info in engine.commands.items():
+            # We'll iterate on every app and when we find the app instance that is inside the
+            # configuration, we'll launch it.
+            if "app" not in info["properties"]:
+                # Certain commands are not coming from apps, so skip those for now.
+                continue
+            if info["properties"]["app"].instance_name == "tk-multi-run-this-app":
+                info["callback"]()
+                app_launched = True
+
+        if app_launched is False:
+            print(
+                "No commands were found. It is possible the application failed to initialize?"
+            )
+            return 1
 
     # Loops until all dialogs are closed.
     engine.q_app.exec_()
