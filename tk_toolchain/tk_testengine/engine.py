@@ -47,57 +47,90 @@ class TestEngine(sgtk.platform.Engine):
 
     def __build_menu(self, ctx):
         context_menu = self._generate_context_menu(ctx)
-        menus = [
-            {"type": "menu", "title": str(ctx), "children": context_menu},
-            self._create_separator(),
-        ]
+        menus = [{"type": "menu", "title": str(ctx), "children": context_menu}]
+        self._add_separator(menus)
 
         commands = getattr(None, "filter_menu_commands", lambda cmds, ctx: cmds)(
             self.commands, ctx
         )
 
+        self._add_favorites(menus, commands)
+
+        commands_per_app = {}
+
         for name, details in commands.items():
             if details["properties"].get("type") == "context_menu":
-                context_menu.append(
-                    self._create_menu_item(
-                        name, details["callback"], details["properties"].get("icon")
-                    )
-                )
-            # app = details.get("app")
-            # try:
-            #     app_name = self._app.display_name
-            # except AttributeError:
-            #     app_name = None
+                self._add_command_to_menu(context_menu, name, details)
+            else:
+                app = details["properties"].get("app")
+                try:
+                    app_name = app.display_name
+                except AttributeError:
+                    app_name = "Other Items"
+                commands_per_app.setdefault(app_name, []).append((name, details))
+
+        for app_name in sorted(commands_per_app):
+            app_menu = {"type": "menu", "title": app_name, "children": []}
+            menus.append(app_menu)
+            for name, details in commands_per_app[app_name]:
+                self._add_command_to_menu(app_menu["children"], name, details)
+
+        # Menus after the context menu with only a single item are
+        # flattened into the main Shotgun menu.
+        for idx, menu in enumerate(menus):
+            if "children" not in menu:
+                continue
+
+            if len(menu["children"]) == 1:
+                menus[idx] = menu["children"][0]
 
         self._build_menu(menus)
-
-        # menu.extend(self._generate_favorites(commands))
 
     def _build_menu(self, menu_items, parent_menu=None):
         if parent_menu is None:
             parent_menu = self._menu_bar.addMenu("Shotgun")
 
         for item in menu_items:
+
             if item["type"] == "separator":
                 parent_menu.addSeparator()
             elif item["type"] == "menu":
+                print(item)
                 sub_menu = parent_menu.addMenu(item["title"])
                 self._build_menu(item["children"], sub_menu)
             else:
                 parent_menu.addAction(item["title"]).triggered.connect(item["callback"])
 
-    # def _generate_favorites(self, commands):
+    def _add_favorites(self, menus, commands):
 
-    #     favorites = []
-    #     for fav in self.engine.get_setting("menu_favourites", []):
-    #         app_instance_name = fav["app_instance"]
-    #         menu_name = fav["name"]
+        favorites = []
 
-    #         # Scan through all menu items.
-    #         for name, details in commands.items():
-    #              if details["app"] and details["app"].instance_name == app_instance_name and name == menu_name:
-    #                  favorites =
-    #     menu_handle.addSeparator()
+        for fav in self.get_setting("menu_favourites", []):
+            app_instance_name = fav["app_instance"]
+            menu_name = fav["name"]
+
+            for name, details in commands:
+                app = details["properties"].get("app")
+                if app is None:
+                    continue
+
+                if app.app_instance_name == app_instance_name and name == menu_name:
+                    self._add_command_to_menu(favorites, name, details)
+
+        if favorites:
+            self._add_separator(menus)
+            menus.extend(favorites)
+            self._add_separator(menus)
+
+    def _add_command_to_menu(self, menu, name, details):
+        menu.append(
+            self._create_menu_item(
+                name, details["callback"], details["properties"].get("icon")
+            )
+        )
+
+    def _create_menu_item(self, title, callback, icon=None):
+        return {"type": "action", "title": title, "icon": icon, "callback": callback}
 
     def _generate_context_menu(self, ctx):
         context_menu = [self._create_menu_item("Jump to Shotgun", self._jump_to_sg)]
@@ -105,12 +138,11 @@ class TestEngine(sgtk.platform.Engine):
             context_menu.append(
                 self._create_menu_item("Jump to File System", self._jump_to_fs)
             )
-
-        context_menu.append(self._create_separator())
+        self._add_separator(context_menu)
         return context_menu
 
-    def _create_separator(self):
-        return {"type": "separator"}
+    def _add_separator(self, menu):
+        menu.append({"type": "separator"})
 
     def _jump_to_sg(self):
         """
@@ -131,9 +163,6 @@ class TestEngine(sgtk.platform.Engine):
                 "file://{0}".format(disk_location).replace("\\", "/")
             ):
                 self.logging.error("Failed to open '%s'!", disk_location)
-
-    def _create_menu_item(self, title, callback, icon=None):
-        return {"type": "action", "title": title, "icon": icon, "callback": callback}
 
     @property
     def q_app(self):
