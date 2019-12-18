@@ -16,14 +16,12 @@
 engines:
   tk-testengine:
     location:
-      type: path
+      type: dev
       path: $SHOTGUN_TEST_ENGINE
-    menu_favourites:
-    - {app_instance: tk-multi-workfiles2, name: File Open...}
     apps:
       tk-multi-run-this-app:
         location:
-          type: path
+          type: dev
           path: $SHOTGUN_TK_APP_LOCATION
 
 frameworks:
@@ -32,17 +30,17 @@ frameworks:
   # dependencies are and generating the appropriate config on the fly.
   tk-framework-qtwidgets_v2.x.x:
     location:
-      type: path
+      type: dev
       path: $SHOTGUN_REPOS_ROOT/tk-framework-qtwidgets
   tk-framework-shotgunutils_v5.x.x:
     location:
-      type: path
+      type: dev
       path: $SHOTGUN_REPOS_ROOT/tk-framework-shotgunutils
   tk-framework-shotgunutils_v4.x.x:
     location:
-      type: path
+      type: dev
       path: $SHOTGUN_REPOS_ROOT/tk-framework-shotgunutils
   tk-framework-widget_v0.2.x:
     location:
-      type: path
+      type: dev
       path: $SHOTGUN_REPOS_ROOT/tk-framework-widget
