@@ -18,6 +18,8 @@ engines:
     location:
       type: path
       path: $SHOTGUN_TEST_ENGINE
+    menu_favourites:
+    - {app_instance: tk-multi-workfiles2, name: File Open...}
     apps:
       tk-multi-run-this-app:
         location:
