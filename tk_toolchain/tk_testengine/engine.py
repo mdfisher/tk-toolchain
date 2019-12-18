@@ -42,11 +42,11 @@ class TestEngine(sgtk.platform.Engine):
             self._initialize_dark_look_and_feel()
             self._menu_bar = QtGui.QMenuBar()
 
-    def _build_shotgun_menu(self, name, menu_items):
+    def _build_shotgun_menu(self, menu_items):
         """
         DCC
         """
-        menu = self._menu_bar.addMenu("Shotgun")
+        menu = self._menu_bar.addMenu(self.shotgun_menu_name)
         self._build_menu(menu_items, menu)
 
     def _build_menu(self, menu_items, parent_menu):
