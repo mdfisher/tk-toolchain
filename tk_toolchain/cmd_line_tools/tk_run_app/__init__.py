@@ -216,7 +216,9 @@ def main(arguments=None):
     #                                      'short_name': 'work_area_info',
     #                                      'type': 'context_menu'}}}
 
-    if options["--dcc-mode"] is False:
+    if options["--dcc-mode"]:
+        engine.show_menu()
+    else:
         app_launched = False
         for name, info in engine.commands.items():
             # We'll iterate on every app and when we find the app instance that is inside the
@@ -233,6 +235,9 @@ def main(arguments=None):
                 "No commands were found. It is possible the application failed to initialize?"
             )
             return 1
+
+    if options["--dcc-mode"]:
+        engine.q_app.setQuitOnLastWindowClosed(False)
 
     # Loops until all dialogs are closed.
     engine.q_app.exec_()
